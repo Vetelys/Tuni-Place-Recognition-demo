@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.tuniclassify">
-
-    <!--Camera and write external storage permissions-->
-    <uses-permission android:name="android.permission.CAMERA"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <!-- Camera and write external storage permissions -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -13,6 +13,14 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.TuniClassify">
+        <activity
+            android:name=".ServerActivity"
+            android:exported="true" />
+        <activity
+            android:name=".MapActivity"
+            android:exported="true"
+            android:label="@string/title_activity_map"
+            android:theme="@style/Theme.TuniClassify.NoActionBar" />
         <activity
             android:name=".MainActivity"
             android:exported="true">

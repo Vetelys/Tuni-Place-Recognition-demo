@@ -4,8 +4,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Random;
 
 import android.Manifest;
 import android.content.ContentValues;
@@ -20,14 +22,31 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
 public class MainActivity extends AppCompatActivity {
+    private static final String URL = "192.168.1.2";
+    private static final String PORT = "5000";
+    private static final String SERVER_URL = "http://192.168.1.2:5000/";
+
     private static final int PERMISSION_REQUEST_CODE = 1000;
     private static final int CAMERA_REQUEST_CODE = 1001;
+    private static final int LOCATION_REQUEST_CODE = 1002;
+
+    boolean picTaken = false;
 
     ImageButton cameraBtn;
     ImageButton uploadBtn;
+    ImageButton serverBtn;
     ImageView cameraView;
     Uri img;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
         cameraView = findViewById(R.id.image_view);
         cameraBtn = findViewById(R.id.camera_btn);
         uploadBtn = findViewById(R.id.upload_btn);
+        serverBtn = findViewById(R.id.server_btn);
 
         // camera button clicked
         cameraBtn.setOnClickListener(new View.OnClickListener(){
@@ -48,9 +68,11 @@ public class MainActivity extends AppCompatActivity {
                     if (checkSelfPermission(Manifest.permission.CAMERA) ==
                             PackageManager.PERMISSION_DENIED ||
                             checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) ==
+                            PackageManager.PERMISSION_DENIED ||
+                            checkSelfPermission(Manifest.permission.INTERNET )==
                             PackageManager.PERMISSION_DENIED){
                         // permission denied, request permission
-                        String[] permission = {Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE};
+                        String[] permission = {Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.INTERNET};
                         requestPermissions(permission, PERMISSION_REQUEST_CODE);
                     }
                     else{
@@ -61,9 +83,46 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        uploadBtn.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                if(!picTaken){
+                    Toast.makeText(MainActivity.this, "Take a picture before uploading it", Toast.LENGTH_SHORT).show();
+                }
+                else{
+                    openMapActivity();
+                }
+
+            }
+        });
+        serverBtn.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                Intent settingsIntent = new Intent(MainActivity.this, ServerActivity.class);
+                startActivity(settingsIntent);
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+            }
+        });
+
     }
 
-    private void getPicture() {
+
+
+    public void openMapActivity() {
+        Intent mapIntent = new Intent(this, MapActivity.class);
+        //TODO: retrieve coords from server
+        Random random = new Random();
+        int max = 500;
+        int min = 5;
+        int x = random.nextInt((max-min) +1) + min;
+        int y = random.nextInt((max-min) +1) + min;;
+        mapIntent.putExtra("x_coord", x);
+        mapIntent.putExtra("y_coord", y);
+        startActivityForResult(mapIntent, LOCATION_REQUEST_CODE);
+        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+    }
+
+    public void getPicture() {
         ContentValues values = new ContentValues();
         //timestamp as image name
         SimpleDateFormat date = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss");
@@ -96,12 +155,26 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    //camera activity result
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK){
-            cameraView.setImageURI(img);
+        if(requestCode == CAMERA_REQUEST_CODE){
+            if (resultCode == RESULT_OK){
+                cameraView.setImageURI(img);
+                picTaken = true;
+            }
+        }
+        else if(requestCode == LOCATION_REQUEST_CODE){
+            {
+                if(resultCode == RESULT_OK){
+                    Toast.makeText(this, "Place was recognized successfully!", Toast.LENGTH_SHORT).show();
+                }
+                else{
+                    Toast.makeText(this, "Place recognition failed!", Toast.LENGTH_SHORT).show();
+                }
+            }
+
         }
     }
 }

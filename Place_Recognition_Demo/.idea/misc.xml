@@ -3,6 +3,12 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Users/Joona/AndroidStudioProjects/Place_Recognition_Demo/app/src/main/res/drawable/ic_baseline_camera_24.xml" value="0.22135416666666666" />
+        <entry key="..\:/Users/Joona/AndroidStudioProjects/Place_Recognition_Demo/app/src/main/res/drawable/ic_baseline_cloud_upload_24.xml" value="0.22135416666666666" />
+        <entry key="..\:/Users/Joona/AndroidStudioProjects/Place_Recognition_Demo/app/src/main/res/drawable/ic_baseline_settings_24.xml" value="0.22135416666666666" />
+        <entry key="..\:/Users/Joona/AndroidStudioProjects/Place_Recognition_Demo/app/src/main/res/layout/activity_main.xml" value="0.36666666666666664" />
+        <entry key="..\:/Users/Joona/AndroidStudioProjects/Place_Recognition_Demo/app/src/main/res/layout/activity_map.xml" value="0.36666666666666664" />
+        <entry key="..\:/Users/Joona/AndroidStudioProjects/Place_Recognition_Demo/app/src/main/res/layout/activity_server.xml" value="0.20520833333333333" />
         <entry key="..\:/Users/Joona/AndroidStudioProjects/TuniClassify/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.22135416666666666" />
         <entry key="..\:/Users/Joona/AndroidStudioProjects/TuniClassify/app/src/main/res/drawable/ic_baseline_add_a_photo_24.xml" value="0.3828125" />
         <entry key="..\:/Users/Joona/AndroidStudioProjects/TuniClassify/app/src/main/res/drawable/ic_baseline_camera_24.xml" value="0.22135416666666666" />
