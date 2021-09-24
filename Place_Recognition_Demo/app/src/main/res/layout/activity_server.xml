@@ -41,11 +41,11 @@
     </LinearLayout>
 
     <Button
-        android:id="@+id/serverButton"
+        android:id="@+id/settingButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Connect to Server"
-        android:onClick="connectServer"/>
+        android:text="Save settings"
+        android:onClick="saveSettings"/>
 
 
 </LinearLayout>

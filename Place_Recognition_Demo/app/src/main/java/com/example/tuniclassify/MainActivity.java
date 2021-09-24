@@ -3,49 +3,65 @@ package com.example.tuniclassify;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import android.Manifest;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.FileUtils;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import org.json.JSONObject;
+
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity {
-    private static final String URL = "192.168.1.2";
-    private static final String PORT = "5000";
-    private static final String SERVER_URL = "http://192.168.1.2:5000/";
+    //default server ip and port
+    private static String IP = "192.168.1.2";
+    private static String PORT = "5000";
+    private static String currentPhotoPath;
+    private static final MediaType MEDIA_TYPE_JPG = MediaType.parse("image/jpeg");
 
+    private static final int SETTINGS_CHANGED = 2001;
     private static final int PERMISSION_REQUEST_CODE = 1000;
     private static final int CAMERA_REQUEST_CODE = 1001;
     private static final int LOCATION_REQUEST_CODE = 1002;
 
+    private static Uri img = null;
     boolean picTaken = false;
 
     ImageButton cameraBtn;
     ImageButton uploadBtn;
     ImageButton serverBtn;
     ImageView cameraView;
-    Uri img;
+
 
 
     @Override
@@ -69,10 +85,12 @@ public class MainActivity extends AppCompatActivity {
                             PackageManager.PERMISSION_DENIED ||
                             checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) ==
                             PackageManager.PERMISSION_DENIED ||
+                            checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) ==
+                                    PackageManager.PERMISSION_DENIED ||
                             checkSelfPermission(Manifest.permission.INTERNET )==
                             PackageManager.PERMISSION_DENIED){
                         // permission denied, request permission
-                        String[] permission = {Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.INTERNET};
+                        String[] permission = {Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.INTERNET};
                         requestPermissions(permission, PERMISSION_REQUEST_CODE);
                     }
                     else{
@@ -86,56 +104,154 @@ public class MainActivity extends AppCompatActivity {
         uploadBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                if(!picTaken){
+                if (!picTaken) {
                     Toast.makeText(MainActivity.this, "Take a picture before uploading it", Toast.LENGTH_SHORT).show();
-                }
-                else{
-                    openMapActivity();
-                }
+                } else {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 
+                        if (checkSelfPermission(Manifest.permission.INTERNET) ==
+                                PackageManager.PERMISSION_DENIED) {
+                            // permission denied, request permission
+                            String[] permission = {Manifest.permission.INTERNET};
+                            requestPermissions(permission, PERMISSION_REQUEST_CODE);
+                        } else {
+                            //permissions OK
+                            openMapActivity();
+                        }
+                    }
+                }
             }
+
         });
         serverBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                Intent settingsIntent = new Intent(MainActivity.this, ServerActivity.class);
-                startActivity(settingsIntent);
-                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+                openSettingsActivity();
             }
         });
 
     }
 
 
-
-    public void openMapActivity() {
-        Intent mapIntent = new Intent(this, MapActivity.class);
+    public void openMapActivity(){
         //TODO: retrieve coords from server
+        //https://square.github.io/okhttp/recipes/
+
+        uploadImage();
         Random random = new Random();
-        int max = 500;
+        int max = 1000;
         int min = 5;
         int x = random.nextInt((max-min) +1) + min;
         int y = random.nextInt((max-min) +1) + min;;
+        Intent mapIntent = new Intent(this, MapActivity.class);
         mapIntent.putExtra("x_coord", x);
         mapIntent.putExtra("y_coord", y);
         startActivityForResult(mapIntent, LOCATION_REQUEST_CODE);
         overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+
+    }
+
+    //FROM HERE: https://developer.android.com/training/camera/photobasics
+    private File createImageFile() throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        currentPhotoPath = image.getAbsolutePath();
+        return image;
+    }
+
+
+
+    public void uploadImage(){
+
+        File file = new File(currentPhotoPath);
+
+
+        String filename = file.getName();
+
+        Log.d("name", filename);
+
+        RequestBody req = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("title", "Tuni place recognition")
+                .addFormDataPart("image", filename, RequestBody.create(MEDIA_TYPE_JPG, file))
+                .build();
+
+        OkHttpClient client = new OkHttpClient();
+
+        String LocalhostUrl = "http://"+IP+":"+PORT+"/";
+        Request request = new Request.Builder()
+                .url(LocalhostUrl)
+                .post(req)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                call.cancel();
+                Logger logger = Logger.getAnonymousLogger();
+                logger.log(Level.SEVERE,"Unable to upload. Check server settings.", e);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(MainActivity.this, "File upload failed! Check server settings.", Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try{
+                            Toast.makeText(MainActivity.this, response.body().string(), Toast.LENGTH_LONG).show();
+                        }   catch (IOException e){
+                            e.printStackTrace();
+                        }
+
+                    }
+                });
+
+            }
+        });
+
+
+    }
+
+    public void openSettingsActivity(){
+        Intent settingsIntent = new Intent(this, ServerActivity.class);
+        startActivityForResult(settingsIntent, SETTINGS_CHANGED);
+        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+
     }
 
     public void getPicture() {
-        ContentValues values = new ContentValues();
-        //timestamp as image name
-        SimpleDateFormat date = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss");
-        String dateNow = date.format(new Date());
-        Toast.makeText(this, "Opening camera", Toast.LENGTH_SHORT).show();
-        values.put(MediaStore.Images.Media.TITLE, dateNow);
-        values.put(MediaStore.Images.Media.DESCRIPTION, "TuniClassify image");
-        img = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
-        
-        Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, img);
-        startActivityForResult(cameraIntent, CAMERA_REQUEST_CODE);
 
+        Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (cameraIntent.resolveActivity(getPackageManager()) != null){
+            File photoFile = null;
+            try{
+                photoFile = createImageFile();
+            }   catch (IOException ex){
+                Toast.makeText(this, "Could not create image file!", Toast.LENGTH_SHORT).show();
+            }
+            if (photoFile != null) {
+                img = FileProvider.getUriForFile(this, "com.example.android.fileprovider", photoFile);
+                cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, img);
+
+                Toast.makeText(this, "Opening camera", Toast.LENGTH_SHORT).show();
+                startActivityForResult(cameraIntent, CAMERA_REQUEST_CODE);
+            }
+        }
     }
 
     //called when denying permissions on popup
@@ -163,6 +279,7 @@ public class MainActivity extends AppCompatActivity {
             if (resultCode == RESULT_OK){
                 cameraView.setImageURI(img);
                 picTaken = true;
+                Log.d("current path", currentPhotoPath);
             }
         }
         else if(requestCode == LOCATION_REQUEST_CODE){
@@ -175,6 +292,17 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
+        }
+        else if(requestCode == SETTINGS_CHANGED){
+            if(resultCode == RESULT_OK && data != null){
+                Intent settingsIntent = data;
+                PORT = settingsIntent.getStringExtra("port");
+                IP = settingsIntent.getStringExtra("ip");
+                Toast.makeText(this, "Settings changed to http://" + IP + ":" + PORT+"/", Toast.LENGTH_LONG).show();
+            }
+            else{
+                Toast.makeText(this, "Could not save settings", Toast.LENGTH_LONG).show();
+            }
         }
     }
 }
