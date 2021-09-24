@@ -24,7 +24,6 @@ import okhttp3.Response;
 
 public class ServerActivity extends AppCompatActivity {
 
-    private static final int SETTINGS_CHANGED = 2001;
     EditText portView;
     EditText ipAddressView;
     Button settingButton;
@@ -48,8 +47,12 @@ public class ServerActivity extends AppCompatActivity {
         Intent settingIntent = new Intent(this, MainActivity.class);
         String port = portView.getText().toString();
         String ip = ipAddressView.getText().toString();
+        portView.setText(null);
+        ipAddressView.setText(null);
+
         settingIntent.putExtra("ip", ip);
         settingIntent.putExtra("port", port);
+
         setResult(RESULT_OK, settingIntent);
         finish();
 

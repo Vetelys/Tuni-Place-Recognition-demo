@@ -24,9 +24,11 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.FileUtils;
+import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -46,13 +48,17 @@ public class MainActivity extends AppCompatActivity {
     //default server ip and port
     private static String IP = "192.168.1.2";
     private static String PORT = "5000";
+
+    private final OkHttpClient client = new OkHttpClient();
+
+
     private static String currentPhotoPath;
     private static final MediaType MEDIA_TYPE_JPG = MediaType.parse("image/jpeg");
 
-    private static final int SETTINGS_CHANGED = 2001;
     private static final int PERMISSION_REQUEST_CODE = 1000;
     private static final int CAMERA_REQUEST_CODE = 1001;
     private static final int LOCATION_REQUEST_CODE = 1002;
+    private static final int SETTINGS_REQUEST_CODE = 1003;
 
     private static Uri img = null;
     boolean picTaken = false;
@@ -61,7 +67,6 @@ public class MainActivity extends AppCompatActivity {
     ImageButton uploadBtn;
     ImageButton serverBtn;
     ImageView cameraView;
-
 
 
     @Override
@@ -78,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
         cameraBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                //check for camera and external storage write permissions
+                //check for camera and storage write permissions
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
 
                     if (checkSelfPermission(Manifest.permission.CAMERA) ==
@@ -86,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
                             checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) ==
                             PackageManager.PERMISSION_DENIED ||
                             checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) ==
-                                    PackageManager.PERMISSION_DENIED ||
+                            PackageManager.PERMISSION_DENIED ||
                             checkSelfPermission(Manifest.permission.INTERNET )==
                             PackageManager.PERMISSION_DENIED){
                         // permission denied, request permission
@@ -107,49 +112,31 @@ public class MainActivity extends AppCompatActivity {
                 if (!picTaken) {
                     Toast.makeText(MainActivity.this, "Take a picture before uploading it", Toast.LENGTH_SHORT).show();
                 } else {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        Thread thread = new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    uploadImage();
+                                }catch(Exception e){
+                                    e.printStackTrace();
+                                    runOnUiThread(()-> Toast.makeText(MainActivity.this, "Could not connect to server! Check server settings.", Toast.LENGTH_LONG).show());
+                                }
+                            }
+                        });
 
-                        if (checkSelfPermission(Manifest.permission.INTERNET) ==
-                                PackageManager.PERMISSION_DENIED) {
-                            // permission denied, request permission
-                            String[] permission = {Manifest.permission.INTERNET};
-                            requestPermissions(permission, PERMISSION_REQUEST_CODE);
-                        } else {
-                            //permissions OK
-                            openMapActivity();
-                        }
+                        thread.start();
                     }
-                }
             }
-
         });
+
         serverBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
                 openSettingsActivity();
             }
         });
-
     }
 
-
-    public void openMapActivity(){
-        //TODO: retrieve coords from server
-        //https://square.github.io/okhttp/recipes/
-
-        uploadImage();
-        Random random = new Random();
-        int max = 1000;
-        int min = 5;
-        int x = random.nextInt((max-min) +1) + min;
-        int y = random.nextInt((max-min) +1) + min;;
-        Intent mapIntent = new Intent(this, MapActivity.class);
-        mapIntent.putExtra("x_coord", x);
-        mapIntent.putExtra("y_coord", y);
-        startActivityForResult(mapIntent, LOCATION_REQUEST_CODE);
-        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
-
-    }
 
     //FROM HERE: https://developer.android.com/training/camera/photobasics
     private File createImageFile() throws IOException {
@@ -169,11 +156,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
-    public void uploadImage(){
+    private void uploadImage() {
 
         File file = new File(currentPhotoPath);
-
 
         String filename = file.getName();
 
@@ -182,12 +167,12 @@ public class MainActivity extends AppCompatActivity {
         RequestBody req = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
                 .addFormDataPart("title", "Tuni place recognition")
-                .addFormDataPart("image", filename, RequestBody.create(MEDIA_TYPE_JPG, file))
+                .addFormDataPart("image", filename,
+                RequestBody.create(MEDIA_TYPE_JPG, file))
                 .build();
 
-        OkHttpClient client = new OkHttpClient();
+        String LocalhostUrl = "http://" + IP + ":" + PORT + "/";
 
-        String LocalhostUrl = "http://"+IP+":"+PORT+"/";
         Request request = new Request.Builder()
                 .url(LocalhostUrl)
                 .post(req)
@@ -198,7 +183,7 @@ public class MainActivity extends AppCompatActivity {
             public void onFailure(Call call, IOException e) {
                 call.cancel();
                 Logger logger = Logger.getAnonymousLogger();
-                logger.log(Level.SEVERE,"Unable to upload. Check server settings.", e);
+
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -212,24 +197,32 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        try{
-                            Toast.makeText(MainActivity.this, response.body().string(), Toast.LENGTH_LONG).show();
-                        }   catch (IOException e){
+                        try {
+                            String output = response.body().string();
+
+                            Intent mapIntent = new Intent(MainActivity.this, MapActivity.class);
+
+                            String[] coords = output.split(" ");
+
+                            mapIntent.putExtra("x_coord", Integer.parseInt(coords[1]));
+                            mapIntent.putExtra("y_coord", Integer.parseInt(coords[2]));
+
+                            startActivityForResult(mapIntent, LOCATION_REQUEST_CODE);
+                            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+                        } catch (IOException e) {
                             e.printStackTrace();
                         }
-
                     }
                 });
-
             }
         });
-
-
     }
+
+
 
     public void openSettingsActivity(){
         Intent settingsIntent = new Intent(this, ServerActivity.class);
-        startActivityForResult(settingsIntent, SETTINGS_CHANGED);
+        startActivityForResult(settingsIntent, SETTINGS_REQUEST_CODE);
         overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
 
     }
@@ -293,7 +286,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
         }
-        else if(requestCode == SETTINGS_CHANGED){
+        else if(requestCode == SETTINGS_REQUEST_CODE){
             if(resultCode == RESULT_OK && data != null){
                 Intent settingsIntent = data;
                 PORT = settingsIntent.getStringExtra("port");

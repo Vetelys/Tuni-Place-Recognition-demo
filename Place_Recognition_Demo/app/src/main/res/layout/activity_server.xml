@@ -19,7 +19,7 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:id="@+id/IPAddress"
-            android:text="192.168.1.2" />
+            android:text="" />
     </LinearLayout>
 
     <LinearLayout
@@ -37,7 +37,7 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:id="@+id/portNumber"
-            android:text="5000"/>
+            android:text=""/>
     </LinearLayout>
 
     <Button
