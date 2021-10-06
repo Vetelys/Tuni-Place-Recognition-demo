@@ -26,6 +26,7 @@ public class ServerActivity extends AppCompatActivity {
 
     EditText portView;
     EditText ipAddressView;
+    EditText urlAddressView;
     Button settingButton;
 
     @Override
@@ -35,6 +36,7 @@ public class ServerActivity extends AppCompatActivity {
         settingButton = findViewById(R.id.settingButton);
         portView = findViewById(R.id.portNumber);
         ipAddressView = findViewById(R.id.IPAddress);
+        urlAddressView = findViewById(R.id.urlAddress);
 
         settingButton.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -43,16 +45,29 @@ public class ServerActivity extends AppCompatActivity {
             }
         });
     }
-    void saveSettings(View v){
+    public void saveSettings(View view){
+        String urlToUse = null;
+
         Intent settingIntent = new Intent(this, MainActivity.class);
         String port = portView.getText().toString();
         String ip = ipAddressView.getText().toString();
+        String url = urlAddressView.getText().toString();
         portView.setText(null);
         ipAddressView.setText(null);
+        urlAddressView.setText(null);
+        
+        if(url.equals("") && !ip.equals("") && !port.equals("")){
+            urlToUse = "http://"+ip+":"+port+"/";
+        }
+        else if(!url.equals("")){
+            urlToUse = url;
+        }
+        else{
+            setResult(RESULT_CANCELED);
+            finish();
+        }
 
-        settingIntent.putExtra("ip", ip);
-        settingIntent.putExtra("port", port);
-
+        settingIntent.putExtra("url", urlToUse);
         setResult(RESULT_OK, settingIntent);
         finish();
 
@@ -63,6 +78,5 @@ public class ServerActivity extends AppCompatActivity {
         super.finish();
         overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
     }
-
 
 }

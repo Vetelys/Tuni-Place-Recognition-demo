@@ -46,8 +46,7 @@ import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity {
     //default server ip and port
-    private static String IP = "192.168.1.2";
-    private static String PORT = "5000";
+    private static String URL = "http://192.168.1.2:5000/";
 
     private final OkHttpClient client = new OkHttpClient();
 
@@ -171,10 +170,8 @@ public class MainActivity extends AppCompatActivity {
                 RequestBody.create(MEDIA_TYPE_JPG, file))
                 .build();
 
-        String LocalhostUrl = "http://" + IP + ":" + PORT + "/";
-
         Request request = new Request.Builder()
-                .url(LocalhostUrl)
+                .url(URL)
                 .post(req)
                 .build();
 
@@ -289,9 +286,8 @@ public class MainActivity extends AppCompatActivity {
         else if(requestCode == SETTINGS_REQUEST_CODE){
             if(resultCode == RESULT_OK && data != null){
                 Intent settingsIntent = data;
-                PORT = settingsIntent.getStringExtra("port");
-                IP = settingsIntent.getStringExtra("ip");
-                Toast.makeText(this, "Settings changed to http://" + IP + ":" + PORT+"/", Toast.LENGTH_LONG).show();
+                URL = settingsIntent.getStringExtra("url");
+                Toast.makeText(this, "Settings changed to: " + URL, Toast.LENGTH_LONG).show();
             }
             else{
                 Toast.makeText(this, "Could not save settings", Toast.LENGTH_LONG).show();
