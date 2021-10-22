@@ -8,9 +8,10 @@
     android:gravity="center">
 
     <ImageView
+        android:id="@+id/map_view"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:src="@drawable/tietotalo">
+        android:src="@drawable/ic_baseline_add_a_photo_24">
 
     </ImageView>
     <ImageButton
@@ -29,13 +30,6 @@
         android:layout_alignParentEnd="true"
         android:src="@drawable/ic_baseline_clear_24" />
 
-    <ImageView
-        android:id="@+id/loc_marker"
-        android:layout_width="50dp"
-        android:layout_height="100dp"
-        android:translationX="340dp"
-        android:translationY="160dp"
-        app:srcCompat="@drawable/ic_baseline_location_on_24" />
 
 
 </RelativeLayout>

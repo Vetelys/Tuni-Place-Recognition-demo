@@ -6,19 +6,25 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import android.Manifest;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -78,6 +84,10 @@ public class MainActivity extends AppCompatActivity {
         uploadBtn = findViewById(R.id.upload_btn);
         serverBtn = findViewById(R.id.server_btn);
 
+        //fixes networkonmainthreadexception crash that using threads wouldnt fix
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
+
         // camera button clicked
         cameraBtn.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -122,7 +132,6 @@ public class MainActivity extends AppCompatActivity {
                                 }
                             }
                         });
-
                         thread.start();
                     }
             }
@@ -153,7 +162,6 @@ public class MainActivity extends AppCompatActivity {
         currentPhotoPath = image.getAbsolutePath();
         return image;
     }
-
 
     private void uploadImage() {
 
@@ -195,23 +203,29 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         try {
-                            String output = response.body().string();
-
-                            if(output.equals("ESTIMATE_FAILURE")){
+                            if(response.code() != 200){
                                 Toast.makeText(MainActivity.this, "Could not get coordinates for given picture!", Toast.LENGTH_LONG).show();
                             }else{
-                                Intent mapIntent = new Intent(MainActivity.this, MapActivity.class);
+                                String img_name = "map.png";
+                                InputStream inputStream = response.body().byteStream();
+                                Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+                                inputStream.close();
 
-                                String[] coords = output.split(" ");
-                                Toast.makeText(MainActivity.this, output, Toast.LENGTH_LONG).show();
-                                mapIntent.putExtra("x_coord", Float.parseFloat(coords[1]));
-                                mapIntent.putExtra("y_coord", Float.parseFloat(coords[2]));
+                                FileOutputStream outputStream = openFileOutput(img_name, Context.MODE_PRIVATE);
+                                bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
+
+                                //cleanup
+                                outputStream.close();
+                                bitmap.recycle();
+
+                                Intent mapIntent = new Intent(MainActivity.this, MapActivity.class);
+                                mapIntent.putExtra("img_path", img_name);
 
                                 startActivityForResult(mapIntent, LOCATION_REQUEST_CODE);
                                 overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
                             }
 
-                        } catch (IOException e) {
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
                     }

@@ -1,7 +1,12 @@
 package com.example.tuniclassify;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.Random;
 
 import com.google.android.material.snackbar.Snackbar;
@@ -15,12 +20,13 @@ import android.widget.Toast;
 
 
 public class MapActivity extends AppCompatActivity {
-    private static final int LOCATION_REQUEST_CODE = 1002;
+
     private static final int LOCATION_FAILED = 2000;
 
     ImageButton correctBtn;
     ImageButton falseBtn;
     ImageView location;
+    ImageView mapView;
 
 
 
@@ -28,15 +34,23 @@ public class MapActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
-        Intent mapIntent = getIntent();
-        float x_coord = mapIntent.getIntExtra("x_coord", 0);
-        float y_coord = mapIntent.getIntExtra("y_coord", 0);
-        location = findViewById(R.id.loc_marker);
+
+        mapView = findViewById(R.id.map_view);
         correctBtn = findViewById(R.id.correct_btn);
         falseBtn = findViewById(R.id.false_btn);
 
-        placeCoords(x_coord, y_coord);
-        //Toast.makeText(this, "Coordinates: "+ x_coord + " " + y_coord, Toast.LENGTH_LONG).show();
+        //path for saved map image
+        Bitmap map_img;
+        String img_path = getIntent().getStringExtra("img_path");
+        try{
+            FileInputStream is = this.openFileInput(img_path);
+            map_img = BitmapFactory.decodeStream(is);
+            mapView.setImageBitmap(map_img);
+            is.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
 
         correctBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -65,8 +79,7 @@ public class MapActivity extends AppCompatActivity {
         overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
     }
 
-    private void placeCoords(float x, float y) {
-        location.setY(y);
-        location.setX(x);
+    private void placeMapImage(String path) {
+
     }
 }
