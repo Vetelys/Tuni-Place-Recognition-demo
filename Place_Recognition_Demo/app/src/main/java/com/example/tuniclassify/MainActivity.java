@@ -197,15 +197,20 @@ public class MainActivity extends AppCompatActivity {
                         try {
                             String output = response.body().string();
 
-                            Intent mapIntent = new Intent(MainActivity.this, MapActivity.class);
+                            if(output.equals("ESTIMATE_FAILURE")){
+                                Toast.makeText(MainActivity.this, "Could not get coordinates for given picture!", Toast.LENGTH_LONG).show();
+                            }else{
+                                Intent mapIntent = new Intent(MainActivity.this, MapActivity.class);
 
-                            String[] coords = output.split(" ");
+                                String[] coords = output.split(" ");
+                                Toast.makeText(MainActivity.this, output, Toast.LENGTH_LONG).show();
+                                mapIntent.putExtra("x_coord", Float.parseFloat(coords[1]));
+                                mapIntent.putExtra("y_coord", Float.parseFloat(coords[2]));
 
-                            mapIntent.putExtra("x_coord", Integer.parseInt(coords[1]));
-                            mapIntent.putExtra("y_coord", Integer.parseInt(coords[2]));
+                                startActivityForResult(mapIntent, LOCATION_REQUEST_CODE);
+                                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+                            }
 
-                            startActivityForResult(mapIntent, LOCATION_REQUEST_CODE);
-                            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }

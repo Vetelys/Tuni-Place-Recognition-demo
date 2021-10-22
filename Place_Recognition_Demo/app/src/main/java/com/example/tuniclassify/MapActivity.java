@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 
 public class MapActivity extends AppCompatActivity {
@@ -28,13 +29,14 @@ public class MapActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
         Intent mapIntent = getIntent();
-        int x_coord = mapIntent.getIntExtra("x_coord", 0);
-        int y_coord = mapIntent.getIntExtra("y_coord", 0);
+        float x_coord = mapIntent.getIntExtra("x_coord", 0);
+        float y_coord = mapIntent.getIntExtra("y_coord", 0);
         location = findViewById(R.id.loc_marker);
         correctBtn = findViewById(R.id.correct_btn);
         falseBtn = findViewById(R.id.false_btn);
 
         placeCoords(x_coord, y_coord);
+        //Toast.makeText(this, "Coordinates: "+ x_coord + " " + y_coord, Toast.LENGTH_LONG).show();
 
         correctBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -63,7 +65,7 @@ public class MapActivity extends AppCompatActivity {
         overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
     }
 
-    private void placeCoords(int x, int y) {
+    private void placeCoords(float x, float y) {
         location.setY(y);
         location.setX(x);
     }
