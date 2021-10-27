@@ -84,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
         uploadBtn = findViewById(R.id.upload_btn);
         serverBtn = findViewById(R.id.server_btn);
 
-        //fixes networkonmainthreadexception crash that using threads wouldnt fix
+        //fixes NetworkOnmainThreadException crash that using threads wouldn't fix
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
 
@@ -162,6 +162,46 @@ public class MainActivity extends AppCompatActivity {
         currentPhotoPath = image.getAbsolutePath();
         return image;
     }
+    private void setResult(String result) {
+        File file = new File(currentPhotoPath);
+
+        String filename = file.getName();
+
+        RequestBody req = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("image_name", filename)
+                .addFormDataPart("result", result)
+                .build();
+
+        Request request = new Request.Builder()
+                .url(URL+"result")
+                .post(req)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(MainActivity.this, "Could not save result!", Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(MainActivity.this, "Estimation result set as: " + result, Toast.LENGTH_LONG).show();
+                    }
+                });
+
+            }
+        });
+
+    }
 
     private void uploadImage() {
 
@@ -173,13 +213,12 @@ public class MainActivity extends AppCompatActivity {
 
         RequestBody req = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
-                .addFormDataPart("title", "Tuni place recognition")
                 .addFormDataPart("image", filename,
                 RequestBody.create(MEDIA_TYPE_JPG, file))
                 .build();
 
         Request request = new Request.Builder()
-                .url(URL)
+                .url(URL+"upload")
                 .post(req)
                 .build();
 
@@ -294,10 +333,10 @@ public class MainActivity extends AppCompatActivity {
         else if(requestCode == LOCATION_REQUEST_CODE){
             {
                 if(resultCode == RESULT_OK){
-                    Toast.makeText(this, "Place was recognized successfully!", Toast.LENGTH_SHORT).show();
+                    setResult("Correct");
                 }
                 else{
-                    Toast.makeText(this, "Place recognition failed!", Toast.LENGTH_SHORT).show();
+                    setResult("False");
                 }
             }
 

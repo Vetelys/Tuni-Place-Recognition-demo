@@ -15,8 +15,7 @@ def upload_image():
         print("\nReceived image File name : " + imagefile.filename)
         imagefile.save(filename)
         response_filename = "map.jpg"
-        success = True
-        if(success):
+        if os.path.exists(response_filename):
             return flask.send_file(response_filename, mimetype='image/png')
         else:
             return "", 204
@@ -28,17 +27,25 @@ def upload_image():
 @app.route('/result', methods=['GET', 'POST'])
 def set_result():
     try:
-        print(flask.request.form)
         img_filename = flask.request.form['image_name']
         result = flask.request.form['result']
+
         if result == "Correct":
-            os.rename(os.getcwd()+"\\"+img_filename, os.getcwd()+"\\Correct\\"+img_filename)
+            dir = os.getcwd()+"\\Correct\\"
+
         elif result == "False":
-            os.rename(os.getcwd()+"\\"+img_filename, os.getcwd()+"\\False\\"+img_filename)
+            dir = os.getcwd()+"\\False\\"
+
+        if not os.path.exists(dir):
+            os.makedirs(dir)
+        # move image to folder correct/false
+        os.rename(os.getcwd()+"\\"+img_filename, dir+img_filename)
+        return " ", 200
+
     except Exception as err:
         print("Error: ")
         print(err)
-        return "Error, request did not contain needed data"
+        return "Error, request did not contain needed data", 400
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

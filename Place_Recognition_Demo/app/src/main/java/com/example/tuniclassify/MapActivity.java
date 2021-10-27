@@ -25,7 +25,6 @@ public class MapActivity extends AppCompatActivity {
 
     ImageButton correctBtn;
     ImageButton falseBtn;
-    ImageView location;
     ImageView mapView;
 
 
