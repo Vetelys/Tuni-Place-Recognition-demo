@@ -1,4 +1,4 @@
-package com.example.tuniclassify;
+package com.tuni.placerecognition;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -9,37 +9,28 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Objects;
-import java.util.Random;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import android.Manifest;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.FileUtils;
 import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
-
-import org.json.JSONObject;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -52,10 +43,10 @@ import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity {
     //default server ip and port
-    private static String URL = "http://192.168.1.2:5000/";
+    private static String URL;
+    private static String RESPONSE_TYPE;
 
     private final OkHttpClient client = new OkHttpClient();
-
 
     private static String currentPhotoPath;
     private static final MediaType MEDIA_TYPE_JPG = MediaType.parse("image/jpeg");
@@ -73,6 +64,8 @@ public class MainActivity extends AppCompatActivity {
     ImageButton serverBtn;
     ImageView cameraView;
 
+    SharedPreferences sharedPreferences;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,9 +77,15 @@ public class MainActivity extends AppCompatActivity {
         uploadBtn = findViewById(R.id.upload_btn);
         serverBtn = findViewById(R.id.server_btn);
 
-        //fixes NetworkOnmainThreadException crash that using threads wouldn't fix
+        //fixes NetworkOnMainThreadException crash that using threads wouldn't fix
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
+
+        sharedPreferences = getSharedPreferences("MySharedPref", MODE_PRIVATE);
+
+        RESPONSE_TYPE = sharedPreferences.getString("textResponse", "image");
+        URL = sharedPreferences.getString("url", "http://192.168.1.2:5000/");
+
 
         // camera button clicked
         cameraBtn.setOnClickListener(new View.OnClickListener(){
@@ -115,25 +114,27 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        //upload image button clicked
         uploadBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
                 if (!picTaken) {
                     Toast.makeText(MainActivity.this, "Take a picture before uploading it", Toast.LENGTH_SHORT).show();
                 } else {
-                        Thread thread = new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                try {
-                                    uploadImage();
-                                }catch(Exception e){
-                                    e.printStackTrace();
-                                    runOnUiThread(()-> Toast.makeText(MainActivity.this, "Could not connect to server! Check server settings.", Toast.LENGTH_LONG).show());
-                                }
+                    //networking in its own thread
+                    Thread thread = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                uploadImage();
+                            }catch(Exception e){
+                                e.printStackTrace();
+                                runOnUiThread(()-> Toast.makeText(MainActivity.this, "Could not connect to server! Check server settings.", Toast.LENGTH_LONG).show());
                             }
-                        });
-                        thread.start();
-                    }
+                        }
+                    });
+                    thread.start();
+                }
             }
         });
 
@@ -218,7 +219,7 @@ public class MainActivity extends AppCompatActivity {
                 .build();
 
         Request request = new Request.Builder()
-                .url(URL+"upload")
+                .url(URL+"upload/"+RESPONSE_TYPE)
                 .post(req)
                 .build();
 
@@ -231,6 +232,7 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+                        e.printStackTrace();
                         Toast.makeText(MainActivity.this, "File upload failed! Check server settings.", Toast.LENGTH_LONG).show();
                     }
                 });
@@ -245,23 +247,29 @@ public class MainActivity extends AppCompatActivity {
                             if(response.code() != 200){
                                 Toast.makeText(MainActivity.this, "Could not get coordinates for given picture!", Toast.LENGTH_LONG).show();
                             }else{
-                                String img_name = "map.png";
-                                InputStream inputStream = response.body().byteStream();
-                                Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-                                inputStream.close();
-
-                                FileOutputStream outputStream = openFileOutput(img_name, Context.MODE_PRIVATE);
-                                bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
-
-                                //cleanup
-                                outputStream.close();
-                                bitmap.recycle();
-
                                 Intent mapIntent = new Intent(MainActivity.this, MapActivity.class);
-                                mapIntent.putExtra("img_path", img_name);
+                                if(RESPONSE_TYPE.equals("image")){
+                                    String img_name = "map.png";
+                                    InputStream inputStream = response.body().byteStream();
+                                    Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+                                    inputStream.close();
 
+                                    FileOutputStream outputStream = openFileOutput(img_name, Context.MODE_PRIVATE);
+                                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
+
+                                    //cleanup
+                                    outputStream.close();
+                                    bitmap.recycle();
+
+                                    mapIntent.putExtra("img_path", img_name);
+
+                                }else{
+                                    String output = response.body().string();
+                                    Toast.makeText(MainActivity.this, output, Toast.LENGTH_LONG).show();
+                                }
                                 startActivityForResult(mapIntent, LOCATION_REQUEST_CODE);
                                 overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+
                             }
 
                         } catch (Exception e) {
@@ -293,7 +301,7 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "Could not create image file!", Toast.LENGTH_SHORT).show();
             }
             if (photoFile != null) {
-                img = FileProvider.getUriForFile(this, "com.example.android.fileprovider", photoFile);
+                img = FileProvider.getUriForFile(this, BuildConfig.APPLICATION_ID + ".provider", photoFile);
                 cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, img);
 
                 Toast.makeText(this, "Opening camera", Toast.LENGTH_SHORT).show();
@@ -340,15 +348,12 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
-        }
-        else if(requestCode == SETTINGS_REQUEST_CODE){
-            if(resultCode == RESULT_OK && data != null){
-                Intent settingsIntent = data;
-                URL = settingsIntent.getStringExtra("url");
-                Toast.makeText(this, "Settings changed to: " + URL, Toast.LENGTH_LONG).show();
-            }
-            else{
-                Toast.makeText(this, "Could not save settings", Toast.LENGTH_LONG).show();
+        }else if(requestCode == SETTINGS_REQUEST_CODE){
+            if(resultCode == RESULT_OK){
+                URL = sharedPreferences.getString("url", "http://192.168.1.2:5000/");
+                RESPONSE_TYPE = sharedPreferences.getString("responseType", "image");
+            }else{
+                Toast.makeText(this, "Could not save settings.",Toast.LENGTH_LONG).show();
             }
         }
     }

@@ -1,4 +1,4 @@
-package com.example.tuniclassify;
+package com.tuni.placerecognition;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -6,17 +6,12 @@ import android.graphics.BitmapFactory;
 import android.os.Bundle;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.util.Random;
-
-import com.google.android.material.snackbar.Snackbar;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 
 public class MapActivity extends AppCompatActivity {

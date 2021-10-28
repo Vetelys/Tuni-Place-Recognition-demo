@@ -1,60 +1,61 @@
-package com.example.tuniclassify;
+package com.tuni.placerecognition;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.view.SearchEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Switch;
 import android.widget.Toast;
-
-import java.io.IOException;
-import java.util.Random;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 
 public class ServerActivity extends AppCompatActivity {
-
+    private static final int SETTINGS_REQUEST_CODE = 1003;
     EditText portView;
     EditText ipAddressView;
     EditText urlAddressView;
     Button settingButton;
+    Switch responseTypeCheck;
+    SharedPreferences sharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_server);
+        responseTypeCheck = findViewById(R.id.responseSwitch);
         settingButton = findViewById(R.id.settingButton);
         portView = findViewById(R.id.portNumber);
         ipAddressView = findViewById(R.id.IPAddress);
         urlAddressView = findViewById(R.id.urlAddress);
+        sharedPreferences = getSharedPreferences("MySharedPref", MODE_PRIVATE);
+        String response_type = sharedPreferences.getString("responseType", "image");
+        if (response_type.equals("image")){
+            responseTypeCheck.setChecked(false);
+        }else{
+            responseTypeCheck.setChecked(true);
+        }
+        urlAddressView.setText(sharedPreferences.getString("url", ""));
+
 
         settingButton.setOnClickListener(new View.OnClickListener(){
             @Override
-            public void onClick(View view) {
+            public void onClick(View view)
+            {
                 saveSettings(view);
             }
         });
     }
     public void saveSettings(View view){
         String urlToUse = null;
-
+        SharedPreferences.Editor myEdit = sharedPreferences.edit();
         Intent settingIntent = new Intent(this, MainActivity.class);
         String port = portView.getText().toString();
         String ip = ipAddressView.getText().toString();
         String url = urlAddressView.getText().toString();
-        portView.setText(null);
-        ipAddressView.setText(null);
-        urlAddressView.setText(null);
         
         if(url.equals("") && !ip.equals("") && !port.equals("")){
             urlToUse = "http://"+ip+":"+port+"/";
@@ -62,12 +63,14 @@ public class ServerActivity extends AppCompatActivity {
         else if(!url.equals("")){
             urlToUse = url;
         }
-        else{
-            setResult(RESULT_CANCELED);
-            finish();
-        }
 
-        settingIntent.putExtra("url", urlToUse);
+        myEdit.putString("url", urlToUse);
+        if(responseTypeCheck.isChecked()) {
+            myEdit.putString("responseType", "text");
+        }else{
+            myEdit.putString("responseType", "image");
+        }
+        myEdit.commit();
         setResult(RESULT_OK, settingIntent);
         finish();
 
@@ -78,5 +81,4 @@ public class ServerActivity extends AppCompatActivity {
         super.finish();
         overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
     }
-
 }

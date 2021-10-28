@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.tuniclassify">
+    package="com.tuni.placerecognition">
     <!-- Camera and write external storage permissions -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -26,24 +26,24 @@
 
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="com.example.android.fileprovider"
+            android:authorities="${applicationId}.provider"
             android:exported="false"
             android:grantUriPermissions="true">
-        <meta-data
-            android:name="android.support.FILE_PROVIDER_PATHS"
-            android:resource="@xml/file_paths"></meta-data>
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths"/>
         </provider>
 
         <activity
-            android:name=".ServerActivity"
+            android:name="com.tuni.placerecognition.ServerActivity"
             android:exported="true" />
         <activity
-            android:name=".MapActivity"
+            android:name="com.tuni.placerecognition.MapActivity"
             android:exported="true"
             android:label="@string/title_activity_map"
             android:theme="@style/Theme.TuniClassify.NoActionBar" />
         <activity
-            android:name=".MainActivity"
+            android:name="com.tuni.placerecognition.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

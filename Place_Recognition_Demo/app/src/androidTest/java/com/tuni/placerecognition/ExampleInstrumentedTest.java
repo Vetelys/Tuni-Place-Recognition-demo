@@ -1,4 +1,4 @@
-package com.example.tuniclassify;
+package com.tuni.placerecognition;
 
 import android.content.Context;
 

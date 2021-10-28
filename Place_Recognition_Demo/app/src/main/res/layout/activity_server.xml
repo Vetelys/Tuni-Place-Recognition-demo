@@ -68,6 +68,12 @@
         />
     </LinearLayout>
 
+    <Switch
+        android:id="@+id/responseSwitch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Coordinate response as text popup" />
+
     <Button
         android:id="@+id/settingButton"
         android:layout_width="match_parent"
