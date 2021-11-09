@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 
 public class MapActivity extends AppCompatActivity {
@@ -21,6 +22,7 @@ public class MapActivity extends AppCompatActivity {
     ImageButton correctBtn;
     ImageButton falseBtn;
     ImageView mapView;
+    TextView coordinateView;
 
 
 
@@ -28,7 +30,7 @@ public class MapActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
-
+        coordinateView = findViewById(R.id.coordinateText);
         mapView = findViewById(R.id.map_view);
         correctBtn = findViewById(R.id.correct_btn);
         falseBtn = findViewById(R.id.false_btn);
@@ -36,7 +38,9 @@ public class MapActivity extends AppCompatActivity {
         //path for saved map image
         Bitmap map_img;
         String img_path = getIntent().getStringExtra("img_path");
+        String coords = getIntent().getStringExtra("coordinates");
         try{
+            coordinateView.setText(coords);
             FileInputStream is = this.openFileInput(img_path);
             map_img = BitmapFactory.decodeStream(is);
             mapView.setImageBitmap(map_img);

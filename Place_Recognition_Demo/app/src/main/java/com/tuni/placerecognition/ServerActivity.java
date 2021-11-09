@@ -33,13 +33,8 @@ public class ServerActivity extends AppCompatActivity {
         urlAddressView = findViewById(R.id.urlAddress);
         sharedPreferences = getSharedPreferences("MySharedPref", MODE_PRIVATE);
         String response_type = sharedPreferences.getString("responseType", "image");
-        if (response_type.equals("image")){
-            responseTypeCheck.setChecked(false);
-        }else{
-            responseTypeCheck.setChecked(true);
-        }
+        responseTypeCheck.setChecked(response_type.equals("text"));
         urlAddressView.setText(sharedPreferences.getString("url", ""));
-
 
         settingButton.setOnClickListener(new View.OnClickListener(){
             @Override

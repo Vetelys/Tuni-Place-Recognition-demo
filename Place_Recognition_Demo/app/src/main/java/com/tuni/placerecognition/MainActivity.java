@@ -266,6 +266,7 @@ public class MainActivity extends AppCompatActivity {
                                 }else{
                                     String output = response.body().string();
                                     Toast.makeText(MainActivity.this, output, Toast.LENGTH_LONG).show();
+                                    mapIntent.putExtra("coordinates", output);
                                 }
                                 startActivityForResult(mapIntent, LOCATION_REQUEST_CODE);
                                 overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
@@ -273,6 +274,7 @@ public class MainActivity extends AppCompatActivity {
                             }
 
                         } catch (Exception e) {
+                            Toast.makeText(MainActivity.this, "Could not upload image", Toast.LENGTH_LONG).show();
                             e.printStackTrace();
                         }
                     }
