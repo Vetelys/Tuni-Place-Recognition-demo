@@ -1,18 +1,5 @@
 package com.tuni.placerecognition;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.FileProvider;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.logging.Logger;
-
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
@@ -31,6 +18,19 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.logging.Logger;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -265,7 +265,6 @@ public class MainActivity extends AppCompatActivity {
 
                                 }else{
                                     String output = response.body().string();
-                                    Toast.makeText(MainActivity.this, output, Toast.LENGTH_LONG).show();
                                     mapIntent.putExtra("coordinates", output);
                                 }
                                 startActivityForResult(mapIntent, LOCATION_REQUEST_CODE);
@@ -274,7 +273,6 @@ public class MainActivity extends AppCompatActivity {
                             }
 
                         } catch (Exception e) {
-                            Toast.makeText(MainActivity.this, "Could not upload image", Toast.LENGTH_LONG).show();
                             e.printStackTrace();
                         }
                     }

@@ -4,15 +4,14 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-
-import java.io.FileInputStream;
-
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import java.io.FileInputStream;
 
 
 public class MapActivity extends AppCompatActivity {
@@ -30,7 +29,7 @@ public class MapActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
-        coordinateView = findViewById(R.id.coordinateText);
+        coordinateView = findViewById(R.id.coordinateTextView);
         mapView = findViewById(R.id.map_view);
         correctBtn = findViewById(R.id.correct_btn);
         falseBtn = findViewById(R.id.false_btn);
