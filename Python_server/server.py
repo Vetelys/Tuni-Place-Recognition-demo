@@ -25,7 +25,7 @@ def upload_image(response_param):
     except Exception as err:
         print("Error: ")
         print(err)
-        return "Error, request did not contain an image."
+        return "Error, request did not contain an image.", 400
 
 
 @app.route('/result', methods=['GET', 'POST'])
