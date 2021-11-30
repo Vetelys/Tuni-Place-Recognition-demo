@@ -15,4 +15,5 @@
   
 ## Server
   Server file provided in this repository is just a dummy version that does not do any visual localization,
-  but is able to respond to the requests from the phone for debugging purposes.
+  but is able to respond to the requests from the Android software. Feel free to modify it to fit for your
+  localization purposes, for example using the toolbox found at https://github.com/cvg/Hierarchical-Localization.
