@@ -3,7 +3,7 @@
   Android app to take a picture, send it to a server and display an image or a text (debug) response from the server.
   Implemented as a part of my Bachelor's Thesis for Tampere University Signal Processing Research Laboratory.
   
-  ![teaser]https://user-images.githubusercontent.com/48647132/152004525-7bdb08f1-6cf9-4234-af6e-0ce816eab3d8.png
+  ![teaser](https://user-images.githubusercontent.com/48647132/152004525-7bdb08f1-6cf9-4234-af6e-0ce816eab3d8.png)
   
   ![settings](https://user-images.githubusercontent.com/48647132/152004651-1c9b70a0-670a-444d-a69d-2702b095559f.png)
 
