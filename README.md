@@ -2,6 +2,8 @@
 
   Android app to take a picture, send it to a server and display an image or a text (debug) response from the server.
   Implemented as a part of my Bachelor's Thesis for Tampere University Signal Processing Research Laboratory.
+  https://trepo.tuni.fi/handle/10024/137309
+  
 ## Visual localization using query image:
   ![teaser](https://user-images.githubusercontent.com/48647132/152004525-7bdb08f1-6cf9-4234-af6e-0ce816eab3d8.png)
   
